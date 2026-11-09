@@ -7,11 +7,13 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from click import unstyle
 from typer.testing import CliRunner
 
 from evaluatorq.backends.coding_agent_cli import BUILD_DIR, app
 from evaluatorq.backends.container import DEFAULT_CODING_AGENT_IMAGE
 from tests.backends.fakes import install_fake
+
 
 def test_build_image_argv(tmp_path: Path) -> None:
     log = tmp_path / 'log'
@@ -60,6 +62,10 @@ def test_build_image_missing_binary(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     result = CliRunner().invoke(app, ['build-image', '--binary', str(missing)])
     assert result.exit_code == 2
     assert not started
+    output = ' '.join(unstyle(result.output).replace('│', ' ').split())
+    assert 'Invalid value for --binary' in output
+    assert 'not' in output
+    assert 'found on PATH' in output
 
 
 def test_build_dir_ships_both_files() -> None:
